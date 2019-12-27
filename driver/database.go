@@ -64,6 +64,6 @@ func OpenDatabase(c *ConnectionInfo) *gorm.DB {
 		}
 		db = conn
 	}
-	db.Debug().AutoMigrate(&models.Todo{})
+	db.Debug().AutoMigrate(&models.User{})
 	return db
 }
