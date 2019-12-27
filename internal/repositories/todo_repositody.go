@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"tracker/internal/models"
+	"webrtc-server/internal/models"
 )
 
 type TodoRepository interface {

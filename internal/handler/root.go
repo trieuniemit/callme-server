@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"tracker/driver"
-	"tracker/internal/handler/http"
+	"webrtc-server/driver"
+	"webrtc-server/internal/handler/http"
 
 	"github.com/gorilla/mux"
 )

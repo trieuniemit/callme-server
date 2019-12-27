@@ -1,7 +1,7 @@
 package migrate
 
 import (
-	"tracker/internal/models"
+	"webrtc-server/internal/models"
 
 	"github.com/jinzhu/gorm"
 )

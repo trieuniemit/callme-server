@@ -3,7 +3,7 @@ package driver
 import (
 	"fmt"
 	"os"
-	"tracker/internal/models"
+	"webrtc-server/internal/models"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // ...

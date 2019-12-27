@@ -1,9 +1,9 @@
 package services
 
 import (
-	"tracker/driver"
-	"tracker/internal/models"
-	"tracker/internal/repositories"
+	"webrtc-server/driver"
+	"webrtc-server/internal/models"
+	"webrtc-server/internal/repositories"
 )
 
 // NewSQLPostRepo retunrs implement of post repository interface

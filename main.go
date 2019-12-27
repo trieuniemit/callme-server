@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"tracker/driver"
-	"tracker/internal/configs"
-	"tracker/internal/handler"
+	"webrtc-server/driver"
+	"webrtc-server/internal/configs"
+	"webrtc-server/internal/handler"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"

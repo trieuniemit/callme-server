@@ -1,4 +1,4 @@
-module tracker
+module webrtc-server
 
 go 1.12
 

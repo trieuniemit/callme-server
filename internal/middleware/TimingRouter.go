@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"tracker/pkg/helpers"
+	"webrtc-server/pkg/helpers"
 	"net/http"
 	"strings"
 )

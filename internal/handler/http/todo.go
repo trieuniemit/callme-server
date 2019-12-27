@@ -1,11 +1,11 @@
 package http
 
 import (
-	"tracker/driver"
+	"webrtc-server/driver"
 	"net/http"
 
-	"tracker/internal/repositories"
-	"tracker/internal/services"
+	"webrtc-server/internal/repositories"
+	"webrtc-server/internal/services"
 
 	"github.com/gorilla/mux"
 )
