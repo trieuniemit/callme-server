@@ -2,22 +2,57 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"tracker/driver"
+	"tracker/internal/configs"
+	"tracker/internal/handler"
+
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	"github.com/rs/cors"
 )
 
-func main() {
-	arr := [10]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+func startHTTP(db *gorm.DB, port string) error {
+	database := driver.DatabaseWrapper(db)
 
-	for index, number := range arr {
-		fmt.Println(isPrime(index, number))
+	routes := mux.NewRouter()
+	handler.RegisterHTTP(database, routes)
+
+	corsOptions := cors.Options{
+		AllowOriginFunc:  func(origin string) bool { return true },
+		AllowedMethods:   []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
+		AllowedHeaders:   []string{"Accept", "Accept-Language", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+		Debug:            false,
 	}
+
+	// Cors domain
+	handle := cors.New(corsOptions).Handler(routes)
+
+	log.Println("Server is running on port " + port)
+	return http.ListenAndServe(fmt.Sprintf(":%s", port), handle)
 }
 
-func isPrime(index int, number int) (int, bool) {
-	for i := 2; i < number; i++ {
-		if number%i == 0 {
-			return number, false
-		}
+func main() {
+
+	if err := configs.Init(); err != nil {
+		log.Panicln(err)
 	}
 
-	return number, true
+	config := configs.AppConfig
+
+	db := driver.OpenDatabase(&driver.ConnectionInfo{
+		User:     config.Database.User,
+		Password: config.Database.Password,
+		Host:     config.Database.Host,
+		Port:     config.Database.Port,
+		Name:     config.Database.Name,
+	})
+
+	defer db.Close()
+
+	if err := startHTTP(db, config.HTTP.Port); err != nil {
+		log.Panicln(err)
+	}
 }

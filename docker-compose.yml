@@ -27,8 +27,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgres
     environment:
-        - POSTGRES_DB=webrtc_db
-        - POSTGRES_USER=webrtc
+        - POSTGRES_DB=app_database
+        - POSTGRES_USER=postgres
         - POSTGRES_PASSWORD=admin@123
     ports:
         - 5432:5432

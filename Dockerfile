@@ -10,6 +10,6 @@ RUN CGO_ENABLED=0 GOOS=linux
 
 ARG GO111MODULE=on
 
-RUN go build ./main.go
+RUN go build .
 
 ENTRYPOINT ./main

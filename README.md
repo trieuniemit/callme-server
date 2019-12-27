@@ -1,1 +1,1 @@
-# webrtc-server
+# go-project-structure
