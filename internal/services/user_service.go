@@ -1,20 +1,21 @@
 package services
 
 import (
+	"log"
 	"webrtc-server/driver"
 	"webrtc-server/internal/models"
 	"webrtc-server/internal/repositories"
 )
+
+type userImpl struct {
+	database *driver.Database
+}
 
 // NewUserService retunrs implement of post repository interface
 func NewUserService(db *driver.Database) repositories.UserRepository {
 	return &userImpl{
 		database: db,
 	}
-}
-
-type userImpl struct {
-	database *driver.Database
 }
 
 func (instance *userImpl) List(num int64) ([]*models.User, error) {
@@ -24,21 +25,23 @@ func (instance *userImpl) List(num int64) ([]*models.User, error) {
 }
 
 func (instance *userImpl) GetByID(id int64) (*models.User, error) {
-	var user *models.User
+	user := models.User{}
+
 	if err := instance.database.Conn.First(&user, id).Error; err != nil {
 		return nil, err
 	}
-	return user, nil
+	return &user, nil
 }
 
-func (instance *userImpl) Create(t *models.User) (int64, error) {
-	instance.database.Conn.Create(t)
-	return int64(t.ID), nil
+func (instance *userImpl) Create(u *models.User) (int64, error) {
+	instance.database.Conn.Create(u)
+	log.Println(u)
+	return int64(u.ID), nil
 }
 
-func (instance *userImpl) Update(t *models.User) (*models.User, error) {
-	instance.database.Conn.Update(t)
-	return t, nil
+func (instance *userImpl) Update(u *models.User) (*models.User, error) {
+	instance.database.Conn.Debug().Model(u).Update(u)
+	return u, nil
 }
 
 func (instance *userImpl) Delete(id int64) (bool, error) {

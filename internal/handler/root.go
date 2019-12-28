@@ -15,5 +15,5 @@ func RegisterHTTP(db *driver.Database, r *mux.Router) {
 
 func registerAPI(db *driver.Database, r *mux.Router) {
 	userHandler := http.NewUserHandler(db)
-	http.RegisterTodo(userHandler, r)
+	http.RegisterUser(userHandler, r)
 }
