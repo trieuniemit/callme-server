@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"webrtc-server/driver"
+	"webrtc-server/pkg/helpers"
 
 	"webrtc-server/internal/models"
 	"webrtc-server/internal/repositories"
@@ -16,13 +17,6 @@ import (
 // User ...
 type User struct {
 	repo repositories.UserRepository
-}
-
-// NewUserHandler ...
-func NewUserHandler(db *driver.Database) *User {
-	return &User{
-		repo: services.NewUserService(db),
-	}
 }
 
 // List ...
@@ -47,6 +41,8 @@ func (u *User) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err == nil {
+		passwordHash, _ := helpers.HashAndSalt(user.Password)
+		user.Password = passwordHash
 		u.repo.Create(&user)
 
 		data := Message(true, "success")
@@ -98,8 +94,10 @@ func (u *User) Update(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			passwordHash, err := helpers.HashAndSalt(user.Password)
+			userFound.Password = passwordHash
+
 			userFound.Email = user.Email
-			userFound.Password = user.Password
 			userFound.Fullname = user.Fullname
 			u.repo.Update(userFound)
 
@@ -116,11 +114,28 @@ func (u *User) Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete an user
 func (u *User) Delete(w http.ResponseWriter, r *http.Request) {
-	RespondSuccess(w, Message(true, "success"))
+	vars := mux.Vars(r)
+
+	if id, err := strconv.Atoi(vars["id"]); err == nil {
+		status, _ := u.repo.Delete(int64(id))
+		if status == true {
+			RespondSuccess(w, Message(true, "success"))
+			return
+		}
+	}
+
+	RespondBadRequest(w, Message(true, "User not found."))
 }
 
-// RegisterUser for handle
-func RegisterUser(userHandler *User, routes *mux.Router) {
+// NewUserHandler ...
+func NewUserHandler(db *driver.Database) *User {
+	return &User{
+		repo: services.NewUserService(db),
+	}
+}
+
+// RegisterUserRoutes for handle
+func RegisterUserRoutes(userHandler *User, routes *mux.Router) {
 	routes.HandleFunc("/users", userHandler.List).Methods("GET")
 	routes.HandleFunc("/users", userHandler.Create).Methods("POST")
 	routes.HandleFunc("/users/{id}", userHandler.GetByID).Methods("GET")

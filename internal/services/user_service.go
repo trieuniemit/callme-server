@@ -1,7 +1,6 @@
 package services
 
 import (
-	"log"
 	"webrtc-server/driver"
 	"webrtc-server/internal/models"
 	"webrtc-server/internal/repositories"
@@ -35,20 +34,19 @@ func (instance *userImpl) GetByID(id int64) (*models.User, error) {
 
 func (instance *userImpl) Create(u *models.User) (int64, error) {
 	instance.database.Conn.Create(u)
-	log.Println(u)
 	return int64(u.ID), nil
 }
 
 func (instance *userImpl) Update(u *models.User) (*models.User, error) {
-	instance.database.Conn.Debug().Model(u).Update(u)
+	instance.database.Conn.Model(u).Update(u)
 	return u, nil
 }
 
 func (instance *userImpl) Delete(id int64) (bool, error) {
-	var user *models.User
+	user := models.User{}
 	if err := instance.database.Conn.First(&user, id).Error; err != nil {
 		return false, err
 	}
-	instance.database.Conn.Delete(&user)
+	instance.database.Conn.Debug().Delete(&user)
 	return true, nil
 }
