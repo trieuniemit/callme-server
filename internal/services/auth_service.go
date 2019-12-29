@@ -10,8 +10,17 @@ type authImpl struct {
 	db *driver.Database
 }
 
-func (auth *authImpl) Login(user *models.User) (*models.User, error) {
-	return nil, nil
+func (auth *authImpl) Login(email string) *models.User {
+	user := models.User{}
+
+	err := auth.db.Conn.Model(user).Where("email=?", user.Email).First(&user).Error
+
+	if err == nil {
+		return &user
+	}
+
+	return nil
+
 }
 
 func (auth *authImpl) Register(user *models.User) *models.User {

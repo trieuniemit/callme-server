@@ -46,6 +46,34 @@ func (auth *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	RespondSuccess(w, Message(false, "Register faild!"))
 }
 
+// Login ..
+func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
+	info := authInfo{}
+
+	err := json.NewDecoder(r.Body).Decode(&info)
+	defer r.Body.Close()
+
+	if err == nil {
+		passwordHash, _ := helpers.HashAndSalt(info.Password)
+		info.Password = passwordHash
+
+		user := models.User{}
+
+		userFound, err := auth.repo.Login(&user)
+
+		if userRegisted != nil {
+			data := Message(true, "success")
+			data["user"] = userRegisted
+			RespondSuccess(w, data)
+			return
+		}
+		RespondSuccess(w, Message(false, "Email already exists"))
+		return
+	}
+
+	RespondSuccess(w, Message(false, "Register faild!"))
+}
+
 // NewAuthHandler ...
 func NewAuthHandler(db *driver.Database) *Auth {
 	return &Auth{
