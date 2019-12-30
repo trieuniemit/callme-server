@@ -36,6 +36,7 @@ func (auth *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		if userRegisted != nil {
 			data := Message(true, "success")
 			data["user"] = userRegisted
+			data["token"] = "<Token>"
 			RespondSuccess(w, data)
 			return
 		}
@@ -46,7 +47,7 @@ func (auth *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	RespondSuccess(w, Message(false, "Register faild!"))
 }
 
-// Login ..
+// Login user and response token
 func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	info := authInfo{}
 
@@ -54,18 +55,19 @@ func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err == nil {
-		passwordHash, _ := helpers.HashAndSalt(info.Password)
-		info.Password = passwordHash
 
 		userRegisted := auth.repo.Login(info.Email)
 
-		if userRegisted != nil {
+		passwordCorrect := helpers.ComparePasswords(userRegisted.Password, info.Password)
+
+		if userRegisted != nil && passwordCorrect {
 			data := Message(true, "success")
 			data["user"] = userRegisted
+			data["token"] = "<Token>"
 			RespondSuccess(w, data)
 			return
 		}
-		RespondSuccess(w, Message(false, "Email already exists"))
+		RespondSuccess(w, Message(false, "Email or password incorrect."))
 		return
 	}
 
@@ -82,6 +84,6 @@ func NewAuthHandler(db *driver.Database) *Auth {
 // RegisterAuthRoutes for handle
 func RegisterAuthRoutes(authHandler *Auth, routes *mux.Router) {
 	routes.HandleFunc("/register", authHandler.Register).Methods("POST")
-	// routes.HandleFunc("/login", authHandler.Login).Methods("POST")
+	routes.HandleFunc("/login", authHandler.Login).Methods("POST")
 	// routes.HandleFunc("/logout", authHandler.Logout).Methods("GET")
 }

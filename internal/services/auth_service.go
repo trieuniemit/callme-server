@@ -13,7 +13,7 @@ type authImpl struct {
 func (auth *authImpl) Login(email string) *models.User {
 	user := models.User{}
 
-	err := auth.db.Conn.Model(user).Where("email=?", user.Email).First(&user).Error
+	err := auth.db.Conn.Model(user).Where("email=?", email).First(&user).Error
 
 	if err == nil {
 		return &user
