@@ -57,9 +57,7 @@ func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		passwordHash, _ := helpers.HashAndSalt(info.Password)
 		info.Password = passwordHash
 
-		user := models.User{}
-
-		userFound, err := auth.repo.Login(&user)
+		userRegisted := auth.repo.Login(info.Email)
 
 		if userRegisted != nil {
 			data := Message(true, "success")
