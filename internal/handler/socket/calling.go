@@ -53,11 +53,11 @@ func (callWs *CallingWs) WebSocketHandler(w http.ResponseWriter, r *http.Request
 
 	callWs.socket.clients[cnn] = true
 
-	go callWs.handleConnection(cnn)
-	go callWs.handleMessages(cnn)
+	go callWs.handleReceiveMessages(cnn)
+	go callWs.handleSendMessages(cnn)
 }
 
-func (callWs *CallingWs) handleMessages(nn *websocket.Conn) {
+func (callWs *CallingWs) handleSendMessages(nn *websocket.Conn) {
 	for {
 		// Grab the next message from the broadcast channel
 		msg := <-callWs.socket.broadcast
@@ -71,10 +71,9 @@ func (callWs *CallingWs) handleMessages(nn *websocket.Conn) {
 			}
 		}
 	}
-
 }
 
-func (callWs *CallingWs) handleConnection(cnn *websocket.Conn) {
+func (callWs *CallingWs) handleReceiveMessages(cnn *websocket.Conn) {
 	log.Println("WS: Connected========")
 	for {
 		var msg Message
