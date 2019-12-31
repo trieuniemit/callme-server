@@ -14,7 +14,7 @@ func RegisterHTTP(db *driver.Database, r *mux.Router) {
 	registerAPI(db, apiPrefix)
 
 	// register websocket
-	socket.RegisterWebSocket(socket.NewCallingWebSocket(db), r)
+	socket.RegisterSocketRoute(socket.NewSocketHandler(db), r)
 }
 
 func registerAPI(db *driver.Database, r *mux.Router) {
