@@ -55,7 +55,9 @@ func NewSocketHandler(db *driver.Database) *Socket {
 // RegisterSocketRoute register route for socket
 func RegisterSocketRoute(socketHandler *Socket, routes *mux.Router) {
 	socketHub := newHub()
-	go socketHub.run()
+	go socketHub.run(func(userId int, message string) {
+		log.Println(userId, string(message))
+	})
 
 	routes.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		socketHandler.RegisterSocket(socketHub, w, r)

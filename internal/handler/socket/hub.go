@@ -2,6 +2,8 @@ package socket
 
 import "log"
 
+import "time"
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -27,21 +29,24 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run() {
+func (h *Hub) run(OnSendMessage func(int, string)) {
 	log.Println("WS: init success =======")
 	for {
 		select {
 		case client := <-h.register:
+			log.Println("WS: new connection: ", &client)
 			h.clients[client] = true
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
+				log.Println("WS: close connection: ", &client)
 			}
 		case message := <-h.broadcast:
 			for client := range h.clients {
 				select {
 				case client.send <- message:
+					OnSendMessage(time.Now().Minute(), string(message))
 				default:
 					close(client.send)
 					delete(h.clients, client)
