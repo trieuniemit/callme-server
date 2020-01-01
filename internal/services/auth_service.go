@@ -20,7 +20,6 @@ func (auth *authImpl) Login(email string) *models.User {
 	}
 
 	return nil
-
 }
 
 func (auth *authImpl) Register(user *models.User) *models.User {

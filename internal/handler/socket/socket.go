@@ -3,7 +3,10 @@ package socket
 import (
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 	"webrtc-server/driver"
+	"webrtc-server/pkg/helpers"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -31,7 +34,11 @@ func (socket *Socket) RegisterSocket(hub *Hub, w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	clientID := strconv.FormatInt(time.Now().Unix(), 10)
+	hash, err := helpers.HashAndSalt(clientID)
+
 	client := &Client{
+		ID:   hash,
 		hub:  hub,
 		conn: conn,
 		send: make(chan []byte, 256),
@@ -45,6 +52,18 @@ func (socket *Socket) RegisterSocket(hub *Hub, w http.ResponseWriter, r *http.Re
 	go client.readPump()
 }
 
+// MapEvents func
+func (socket *Socket) MapEvents(target *Client, message *Message) {
+	switch message.Action {
+	case "calling":
+		target.SendMessage(message.ToBytes())
+		break
+	case "end_call":
+		break
+	default:
+	}
+}
+
 // NewSocketHandler handles websocket requests from the peer.
 func NewSocketHandler(db *driver.Database) *Socket {
 	return &Socket{
@@ -55,9 +74,7 @@ func NewSocketHandler(db *driver.Database) *Socket {
 // RegisterSocketRoute register route for socket
 func RegisterSocketRoute(socketHandler *Socket, routes *mux.Router) {
 	socketHub := newHub()
-	go socketHub.run(func(userId int, message string) {
-		log.Println(userId, string(message))
-	})
+	go socketHub.run(socketHandler.MapEvents)
 
 	routes.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		socketHandler.RegisterSocket(socketHub, w, r)
