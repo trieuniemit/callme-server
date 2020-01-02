@@ -54,9 +54,10 @@ func (socket *Socket) RegisterSocket(hub *Hub, w http.ResponseWriter, r *http.Re
 
 // MapEvents func
 func (socket *Socket) MapEvents(target *Client, message *Message) {
+	log.Println(message)
 	switch message.Action {
 	case "calling":
-		target.SendMessage(message.ToBytes())
+		target.Emit("calling", message)
 		break
 	case "end_call":
 		break

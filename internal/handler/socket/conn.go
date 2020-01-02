@@ -111,7 +111,8 @@ func (c *Client) writePump() {
 	}
 }
 
-// SendMessage message to client
-func (c *Client) SendMessage(message []byte) {
-	c.send <- message
+// Emit message to client
+func (c *Client) Emit(action string, message *Message) {
+	message.Content["action"] = action
+	c.send <- message.ToBytes()
 }

@@ -7,9 +7,8 @@ import (
 
 // Message struct
 type Message struct {
-	Action  string `json:"action"`
-	Target  string `json:"target"`
-	Content string `json:"content"`
+	Action  string            `json:"action"`
+	Content map[string]string `json:"content"`
 }
 
 // ToBytes convert struct to []byte
