@@ -112,7 +112,10 @@ func (c *Client) writePump() {
 }
 
 // Emit message to client
-func (c *Client) Emit(action string, message *Message) {
-	message.Content["action"] = action
+func (c *Client) Emit(action string, data map[string]string) {
+	message := &Message{
+		Action: action,
+		Data:   data,
+	}
 	c.send <- message.ToBytes()
 }

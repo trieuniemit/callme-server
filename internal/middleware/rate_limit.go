@@ -65,6 +65,7 @@ func cleanupVisitors() {
 	}
 }
 
+// RateLimit ...
 func RateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		limiter := getVisitor(whatIsMyIP(r))

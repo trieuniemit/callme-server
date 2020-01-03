@@ -36,11 +36,11 @@ func (h *Hub) run(OnReceiveMessage func(*Client, *Message)) {
 		select {
 		case client := <-h.register:
 			log.Println("WS: new connection: ", client.ID)
-			var clientStr string
-			for clientID := range h.clients {
-				clientStr += clientID + "|"
-			}
-			client.send <- []byte(clientStr)
+			// var clientStr string
+			// for clientID := range h.clients {
+			// 	clientStr += clientID + "|"
+			// }
+			// client.send <- []byte(clientStr)
 			h.clients[client.ID] = client
 		case client := <-h.unregister:
 			if _, ok := h.clients[client.ID]; ok {
@@ -55,9 +55,8 @@ func (h *Hub) run(OnReceiveMessage func(*Client, *Message)) {
 			err := json.Unmarshal(messageStr, message)
 			if err == nil {
 				// get target client
-				if target, ok := h.clients[message.Content["target"]]; ok {
-					OnReceiveMessage(target, message)
-				}
+				target := h.clients[message.Data["target"]]
+				OnReceiveMessage(target, message)
 			}
 
 			// for _, client := range h.clients {

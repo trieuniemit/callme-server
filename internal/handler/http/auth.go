@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"webrtc-server/driver"
+	"webrtc-server/internal/handler/response"
+	"webrtc-server/internal/middleware"
 	"webrtc-server/internal/models"
 	"webrtc-server/internal/repositories"
 	"webrtc-server/internal/services"
 	"webrtc-server/pkg/helpers"
+	"webrtc-server/pkg/jwtauth"
 
 	"github.com/gorilla/mux"
 )
@@ -19,7 +22,8 @@ type authInfo struct {
 
 // Auth ...
 type Auth struct {
-	repo repositories.AuthRepository
+	repo       repositories.AuthRepository
+	middleware *middleware.Middleware
 }
 
 // Register new account
@@ -34,17 +38,30 @@ func (auth *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		user.Password = passwordHash
 		userRegisted := auth.repo.Register(&user)
 		if userRegisted != nil {
-			data := Message(true, "success")
+			data := response.Message(true, "success")
 			data["user"] = userRegisted
-			data["token"] = "<Token>"
-			RespondSuccess(w, data)
+
+			tokenString, expiresAt, err := jwtauth.CreateToken(user)
+			if err != nil {
+				data = response.Message(false, err.Error())
+				data["key"] = "something_went_wrong"
+				response.RespondBadRequest(w, data)
+				return
+			}
+
+			data = response.Message(true, "success")
+
+			data["token"] = tokenString
+			data["expires"] = expiresAt
+			data["user"] = user
+			response.RespondSuccess(w, data)
 			return
 		}
-		RespondSuccess(w, Message(false, "Email already exists"))
+		response.RespondSuccess(w, response.Message(false, "Email already exists"))
 		return
 	}
 
-	RespondSuccess(w, Message(false, "Register faild!"))
+	response.RespondSuccess(w, response.Message(false, "Register faild!"))
 }
 
 // Login user and response token
@@ -58,32 +75,35 @@ func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 		userRegisted := auth.repo.Login(info.Email)
 
-		passwordCorrect := helpers.ComparePasswords(userRegisted.Password, info.Password)
+		if userRegisted != nil {
+			passwordCorrect := helpers.ComparePasswords(userRegisted.Password, info.Password)
 
-		if userRegisted != nil && passwordCorrect {
-			data := Message(true, "success")
-			data["user"] = userRegisted
-			data["token"] = "<Token>"
-			RespondSuccess(w, data)
-			return
+			if userRegisted != nil && passwordCorrect {
+				data := response.Message(true, "success")
+				data["user"] = userRegisted
+				data["token"] = "<Token>"
+				response.RespondSuccess(w, data)
+				return
+			}
 		}
-		RespondSuccess(w, Message(false, "Email or password incorrect."))
+		response.RespondSuccess(w, response.Message(false, "Email or password incorrect."))
 		return
 	}
 
-	RespondSuccess(w, Message(false, "Register faild!"))
+	response.RespondSuccess(w, response.Message(false, "Register faild!"))
 }
 
 // NewAuthHandler ...
-func NewAuthHandler(db *driver.Database) *Auth {
+func NewAuthHandler(db *driver.Database, middleware *middleware.Middleware) *Auth {
 	return &Auth{
-		repo: services.NewAuthService(db),
+		repo:       services.NewAuthService(db),
+		middleware: middleware,
 	}
 }
 
 // RegisterAuthRoutes for handle
-func RegisterAuthRoutes(authHandler *Auth, routes *mux.Router) {
-	routes.HandleFunc("/register", authHandler.Register).Methods("POST")
-	routes.HandleFunc("/login", authHandler.Login).Methods("POST")
-	// routes.HandleFunc("/logout", authHandler.Logout).Methods("GET")
+func RegisterAuthRoutes(a *Auth, routes *mux.Router) {
+	routes.HandleFunc("/register", a.Register).Methods("POST")
+	routes.HandleFunc("/login", a.Login).Methods("POST")
+	//routes.HandleFunc("/logout",  a.middleware.Auth(a.Logout)).Methods("GET")
 }
