@@ -1,8 +1,8 @@
-package http
+package response
 
-import(
-	"net/http"
+import (
 	"encoding/json"
+	"net/http"
 )
 
 // Message ...

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 	"webrtc-server/driver"
+	"webrtc-server/internal/repositories"
+	"webrtc-server/internal/services"
 	"webrtc-server/pkg/helpers"
 
 	"github.com/gorilla/mux"
@@ -22,11 +24,12 @@ var upgrader = websocket.Upgrader{
 
 // Socket struct
 type Socket struct {
-	db *driver.Database
+	db   *driver.Database
+	repo repositories.CallRepository
 }
 
-// RegisterSocket ...
-func (socket *Socket) RegisterSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
+// InitSocket ...
+func (s *Socket) InitSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
@@ -52,32 +55,39 @@ func (socket *Socket) RegisterSocket(hub *Hub, w http.ResponseWriter, r *http.Re
 	go client.readPump()
 }
 
-// MapEvents func
-func (socket *Socket) MapEvents(target *Client, message *Message) {
-	log.Println(message)
-	switch message.Action {
-	case "calling":
-		target.Emit("calling", message)
-		break
-	case "end_call":
-		break
-	default:
-	}
-}
-
 // NewSocketHandler handles websocket requests from the peer.
 func NewSocketHandler(db *driver.Database) *Socket {
 	return &Socket{
-		db: db,
+		db:   db,
+		repo: services.NewCallService(db),
 	}
 }
 
-// RegisterSocketRoute register route for socket
-func RegisterSocketRoute(socketHandler *Socket, routes *mux.Router) {
-	socketHub := newHub()
-	go socketHub.run(socketHandler.MapEvents)
+// RegisterSocketID func
+func (s *Socket) RegisterSocketID(token string) bool {
+	return true
+}
 
+// InitSocketRoute register route for socket
+func InitSocketRoute(socketHandler *Socket, routes *mux.Router) {
+	socketHub := newHub()
+	go socketHub.run(func(target *Client, message *Message) {
+		switch message.Action {
+		case "register":
+			//success := socketHandler.RegisterSocketID(message.Data["token"])
+			break
+		case "call":
+			data := map[string]string{
+				"from": message.Data["token"],
+			}
+			target.Emit("calling", data)
+			break
+		case "end_call":
+			break
+		default:
+		}
+	})
 	routes.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		socketHandler.RegisterSocket(socketHub, w, r)
+		socketHandler.InitSocket(socketHub, w, r)
 	})
 }
