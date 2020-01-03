@@ -73,15 +73,26 @@ func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil {
 
-		userRegisted := auth.repo.Login(info.Email)
+		userRegisted, err := auth.repo.Login(info.Email)
 
-		if userRegisted != nil {
+		if err == nil {
 			passwordCorrect := helpers.ComparePasswords(userRegisted.Password, info.Password)
+			if passwordCorrect {
 
-			if userRegisted != nil && passwordCorrect {
+				tokenString, expiresAt, err := jwtauth.CreateToken(userRegisted)
+
+				if err != nil {
+					data := response.Message(false, err.Error())
+					data["key"] = "something_went_wrong"
+					response.RespondBadRequest(w, data)
+					return
+				}
+
 				data := response.Message(true, "success")
+
+				data["token"] = tokenString
+				data["expires"] = expiresAt
 				data["user"] = userRegisted
-				data["token"] = "<Token>"
 				response.RespondSuccess(w, data)
 				return
 			}

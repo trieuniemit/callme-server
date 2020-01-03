@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"webrtc-server/internal/handler/response"
+	"webrtc-server/internal/models"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -52,18 +54,21 @@ func (m *Middleware) Auth(next http.HandlerFunc) http.HandlerFunc {
 
 		//id, _ := strconresponse.ParseUint(fmt.Sprintf("%v", token.Claims.(jwt.MapClaims)["id"]), 10, 32)
 
-		log.Println(token.Claims.(jwt.MapClaims))
+		userMap := (token.Claims.(jwt.MapClaims))
+		log.Println(userMap)
+		user := &models.User{}
 
-		// db.Where("id = ? AND national_number = ? and country_prefix = ?", baseUser.ID, baseUser.NationalNumber, baseUser.CountryPrefix).First(&user)
-		// if user.ID == 0 {
-		// 	resData := response.Message(false, "Invalid authorization token - Does not match UserID")
-		// 	resData["key"] = "invalid_token"
-		// 	response.RespondUnauthorized(w, resData)
-		// 	return
-		// }
+		m.db.Conn.Where("password = ? AND email = ?", userMap["password"], userMap["email"]).First(&user)
 
-		// ctx := context.WithValue(r.Context(), "user", user)
-		// r = r.WithContext(ctx)
+		if user.ID == 0 {
+			resData := response.Message(false, "Invalid authorization token - Does not match UserID")
+			resData["key"] = "invalid_token"
+			response.RespondUnauthorized(w, resData)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "user", user)
+		r = r.WithContext(ctx)
 		next(w, r)
 	})
 }

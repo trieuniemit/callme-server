@@ -7,6 +7,6 @@ import (
 // AuthRepository ...
 type AuthRepository interface {
 	Register(user *models.User) *models.User
-	Login(email string) *models.User
+	Login(email string) (models.User, error)
 	Logout() error
 }

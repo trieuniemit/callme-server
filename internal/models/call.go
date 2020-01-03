@@ -6,5 +6,5 @@ type Call struct {
 	UserID   uint `json:"user_id" `
 	TargetID uint `json:"to_id" `
 	User     User `gorm:"foreignkey:UserID"`
-	Target   User `json:"_" gorm:"foreignkey:TargetID"`
+	Target   User `json:"-" gorm:"foreignkey:TargetID"`
 }
