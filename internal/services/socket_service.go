@@ -17,7 +17,7 @@ func (c *SocketService) RegisterSocketID(token string) bool {
 
 // SetCallingStatus func
 func (c *SocketService) SetCallingStatus(status bool, IDs []uint) {
-	c.db.Conn.Debug().Exec("UPDATE users SET calling=? WHERE id IN (?)", status, IDs)
+	c.db.Conn.Exec("UPDATE users SET calling=? WHERE id IN (?)", status, IDs)
 }
 
 // NewSocketService func
