@@ -18,8 +18,7 @@ import (
 
 // User ...
 type User struct {
-	repo       repositories.UserRepository
-	middleware *middleware.Middleware
+	repo repositories.UserRepository
 }
 
 // List ...
@@ -130,19 +129,22 @@ func (u *User) Delete(w http.ResponseWriter, r *http.Request) {
 	response.RespondBadRequest(w, response.Message(true, "User not found."))
 }
 
+// func (u *User) Authenticate(nextHandle http.HandlerFunc, db *driver.Database) {
+// 	return middleware.Authenticate(nextHandle, u.)
+// }
+
 // NewUserHandler ...
-func NewUserHandler(db *driver.Database, middleware *middleware.Middleware) *User {
+func NewUserHandler(db *driver.Database) *User {
 	return &User{
-		repo:       services.NewUserService(db),
-		middleware: middleware,
+		repo: services.NewUserService(db),
 	}
 }
 
 // RegisterUserRoutes for handle
-func RegisterUserRoutes(u *User, routes *mux.Router) {
-	routes.HandleFunc("/users", u.middleware.Auth(u.List)).Methods("GET")
-	routes.HandleFunc("/users", u.middleware.Auth(u.Create)).Methods("POST")
-	routes.HandleFunc("/users/{id}", u.middleware.Auth(u.GetByID)).Methods("GET")
-	routes.HandleFunc("/users/{id}", u.middleware.Auth(u.Update)).Methods("PUT")
-	routes.HandleFunc("/users/{id}", u.middleware.Auth(u.Delete)).Methods("DELETE")
+func RegisterUserRoutes(u *User, routes *mux.Router, db *driver.Database) {
+	routes.HandleFunc("/users", middleware.Authenticate(u.List, db)).Methods("GET")
+	routes.HandleFunc("/users", middleware.Authenticate(u.Create, db)).Methods("POST")
+	routes.HandleFunc("/users/{id}", middleware.Authenticate(u.GetByID, db)).Methods("GET")
+	routes.HandleFunc("/users/{id}", middleware.Authenticate(u.Update, db)).Methods("PUT")
+	routes.HandleFunc("/users/{id}", middleware.Authenticate(u.Delete, db)).Methods("DELETE")
 }

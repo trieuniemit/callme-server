@@ -8,7 +8,7 @@ import (
 	"webrtc-server/driver"
 	"webrtc-server/internal/repositories"
 	"webrtc-server/internal/services"
-	"webrtc-server/pkg/helpers"
+	"webrtc-server/pkg/jwtauth"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -37,13 +37,13 @@ func (s *Socket) InitSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID := strconv.FormatInt(time.Now().Unix(), 10)
-	hash, err := helpers.HashAndSalt(clientID)
+	clientID := strconv.FormatInt(time.Now().UnixNano(), 10)
 
 	client := &Client{
-		ID:   hash,
+		ID:   clientID,
 		hub:  hub,
 		conn: conn,
+		User: nil,
 		send: make(chan []byte, 256),
 	}
 
@@ -64,29 +64,53 @@ func NewSocketHandler(db *driver.Database) *Socket {
 }
 
 // RegisterSocketID func
-func (s *Socket) RegisterSocketID(token string) bool {
-	return true
+func (s *Socket) RegisterSocketID(token string, client *Client) {
+	user, err := jwtauth.ParseTokenToUser(token, s.db)
+	if err == nil {
+		client.User = &user
+		log.Println(client.User)
+	} else {
+		client.Emit("error", map[string]string{"error": "Invalid token, close connection"})
+		client.Close()
+	}
 }
 
 // InitSocketRoute register route for socket
 func InitSocketRoute(socketHandler *Socket, routes *mux.Router) {
 	socketHub := newHub()
-	go socketHub.run(func(target *Client, message *Message) {
+
+	go socketHub.run(func(from *Client, target *Client, message *Message) {
+
+		//register client
+		if message.Action == "register" {
+			socketHandler.RegisterSocketID(message.Data["token"], from)
+			return
+		}
+
+		// Check client is registed
+		if from.User == nil {
+			from.Emit("error", map[string]string{"error": "Unregistered client"})
+			from.Close()
+			return
+		}
+
+		// handle action
 		switch message.Action {
-		case "register":
-			//success := socketHandler.RegisterSocketID(message.Data["token"])
-			break
 		case "call":
+			if target == nil || from == nil {
+				return
+			}
 			data := map[string]string{
-				"from": message.Data["token"],
+				"from":     from.ID,
+				"fullname": from.User.Fullname,
 			}
 			target.Emit("calling", data)
 			break
 		case "end_call":
 			break
-		default:
 		}
 	})
+
 	routes.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		socketHandler.InitSocket(socketHub, w, r)
 	})

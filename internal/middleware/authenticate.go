@@ -2,18 +2,15 @@ package middleware
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
+	"webrtc-server/driver"
 	"webrtc-server/internal/handler/response"
-	"webrtc-server/internal/models"
-
-	"github.com/dgrijalva/jwt-go"
+	"webrtc-server/pkg/jwtauth"
 )
 
 // Auth validator auth req
-func (m *Middleware) Auth(next http.HandlerFunc) http.HandlerFunc {
+func Authenticate(next http.HandlerFunc, db *driver.Database) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authorizationHeader := r.Header.Get("Authorization")
 
@@ -33,37 +30,11 @@ func (m *Middleware) Auth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("There was an error")
-			}
-			return []byte("secret"), nil
-		})
+		user, err := jwtauth.ParseTokenToUser(bearerToken[1], db)
 		if err != nil {
 			resData := response.Message(false, err.Error())
 			resData["key"] = "invalid_token"
 			response.RespondInternalServer(w, resData)
-			return
-		}
-		if !token.Valid {
-			resData := response.Message(false, "Invalid authorization token")
-			resData["key"] = "invalid_token"
-			response.RespondUnauthorized(w, resData)
-			return
-		}
-
-		//id, _ := strconresponse.ParseUint(fmt.Sprintf("%v", token.Claims.(jwt.MapClaims)["id"]), 10, 32)
-
-		userMap := (token.Claims.(jwt.MapClaims))
-		log.Println(userMap)
-		user := &models.User{}
-
-		m.db.Conn.Where("password = ? AND email = ?", userMap["password"], userMap["email"]).First(&user)
-
-		if user.ID == 0 {
-			resData := response.Message(false, "Invalid authorization token - Does not match UserID")
-			resData["key"] = "invalid_token"
-			response.RespondUnauthorized(w, resData)
 			return
 		}
 

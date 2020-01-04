@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"webrtc-server/driver"
 	"webrtc-server/internal/handler/response"
-	"webrtc-server/internal/middleware"
 	"webrtc-server/internal/models"
 	"webrtc-server/internal/repositories"
 	"webrtc-server/internal/services"
@@ -22,8 +21,7 @@ type authInfo struct {
 
 // Auth ...
 type Auth struct {
-	repo       repositories.AuthRepository
-	middleware *middleware.Middleware
+	repo repositories.AuthRepository
 }
 
 // Register new account
@@ -105,10 +103,9 @@ func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewAuthHandler ...
-func NewAuthHandler(db *driver.Database, middleware *middleware.Middleware) *Auth {
+func NewAuthHandler(db *driver.Database) *Auth {
 	return &Auth{
-		repo:       services.NewAuthService(db),
-		middleware: middleware,
+		repo: services.NewAuthService(db),
 	}
 }
 

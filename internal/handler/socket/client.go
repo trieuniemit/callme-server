@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"time"
+	"webrtc-server/internal/models"
 
 	"github.com/gorilla/websocket"
 )
@@ -19,7 +20,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 512
+	maxMessageSize = 1024
 )
 
 var (
@@ -29,13 +30,10 @@ var (
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	ID  string
-	hub *Hub
-
-	// The websocket connection.
+	ID   string
+	User *models.User
+	hub  *Hub
 	conn *websocket.Conn
-
-	// Buffered channel of outbound messages.
 	send chan []byte
 }
 
@@ -61,7 +59,13 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+
+		msgStruct := MessageFromBytes(message)
+
+		if msgStruct != nil {
+			msgStruct.Data["from"] = c.ID
+			c.hub.broadcast <- msgStruct.ToBytes()
+		}
 	}
 }
 
@@ -118,4 +122,14 @@ func (c *Client) Emit(action string, data map[string]string) {
 		Data:   data,
 	}
 	c.send <- message.ToBytes()
+}
+
+// Close current connecion
+func (c *Client) Close() {
+	if _, ok := c.hub.clients[c.ID]; ok {
+		delete(c.hub.clients, c.ID)
+		close(c.send)
+	}
+	log.Println("WS: close client ", c.ID)
+	c = nil
 }

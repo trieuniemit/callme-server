@@ -3,6 +3,7 @@ package socket
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 )
 
 // Message struct
@@ -17,4 +18,19 @@ func (m *Message) ToBytes() []byte {
 	json.NewEncoder(reqBodyBytes).Encode(m)
 
 	return reqBodyBytes.Bytes()
+}
+
+// MessageFromBytes func
+func MessageFromBytes(msgBytes []byte) *Message {
+	message := &Message{}
+
+	// parse message to Message struct
+	err := json.Unmarshal(msgBytes, message)
+	if err == nil {
+		// get target client
+		return message
+	}
+
+	log.Println(err.Error())
+	return nil
 }

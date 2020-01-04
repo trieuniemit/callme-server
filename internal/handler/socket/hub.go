@@ -1,7 +1,6 @@
 package socket
 
 import (
-	"encoding/json"
 	"log"
 )
 
@@ -30,7 +29,7 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run(OnReceiveMessage func(*Client, *Message)) {
+func (h *Hub) run(OnReceiveMessage func(*Client, *Client, *Message)) {
 	log.Println("WS: init success =======")
 	for {
 		select {
@@ -48,26 +47,16 @@ func (h *Hub) run(OnReceiveMessage func(*Client, *Message)) {
 				close(client.send)
 				log.Println("WS: close connection: ", &client)
 			}
-		case messageStr := <-h.broadcast:
-			message := &Message{}
+		case messageBytes := <-h.broadcast:
+			message := MessageFromBytes(messageBytes)
 
-			// parse message to Message struct
-			err := json.Unmarshal(messageStr, message)
-			if err == nil {
+			if message != nil {
 				// get target client
+				from := h.clients[message.Data["from"]]
 				target := h.clients[message.Data["target"]]
-				OnReceiveMessage(target, message)
+				OnReceiveMessage(from, target, message)
 			}
 
-			// for _, client := range h.clients {
-			// 	select {
-			// 	case client.send <- message:
-			// 		OnSendMessage(client.ID, msg)
-			// 	default:
-			// 		close(client.send)
-			// 		delete(h.clients, client.ID)
-			// 	}
-			// }
 		}
 	}
 }
