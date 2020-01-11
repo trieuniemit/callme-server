@@ -15,7 +15,7 @@ import (
 )
 
 type authInfo struct {
-	Email    string `json:"email"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
@@ -55,7 +55,7 @@ func (auth *Auth) Register(w http.ResponseWriter, r *http.Request) {
 			response.RespondSuccess(w, data)
 			return
 		}
-		response.RespondSuccess(w, response.Message(false, "Email already exists"))
+		response.RespondSuccess(w, response.Message(false, "Username already exists"))
 		return
 	}
 
@@ -71,7 +71,7 @@ func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil {
 
-		userRegisted, err := auth.repo.Login(info.Email)
+		userRegisted, err := auth.repo.Login(info.Username)
 
 		if err == nil {
 			passwordCorrect := helpers.ComparePasswords(userRegisted.Password, info.Password)
@@ -95,7 +95,7 @@ func (auth *Auth) Login(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		response.RespondSuccess(w, response.Message(false, "Email or password incorrect."))
+		response.RespondSuccess(w, response.Message(false, "Username or password incorrect."))
 		return
 	}
 

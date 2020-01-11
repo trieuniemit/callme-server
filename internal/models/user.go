@@ -3,7 +3,7 @@ package models
 // User ...
 type User struct {
 	Model
-	Email    string `json:"email" gorm:"UNIQUE"`
+	Username string `json:"username" gorm:"UNIQUE"`
 	Fullname string `json:"fullname" gorm:"type:text;not null"`
 	Password string `json:"password" gorm:"type:text;not null"`
 	SocketID string `json:"socket_id"`

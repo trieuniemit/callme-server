@@ -99,7 +99,7 @@ func (u *User) Update(w http.ResponseWriter, r *http.Request) {
 			passwordHash, err := helpers.HashAndSalt(user.Password)
 			userFound.Password = passwordHash
 
-			userFound.Email = user.Email
+			userFound.Username = user.Username
 			userFound.Fullname = user.Fullname
 			u.repo.Update(userFound)
 

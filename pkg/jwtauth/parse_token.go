@@ -26,7 +26,7 @@ func ParseTokenToUser(tokenStr string, db *driver.Database) (models.User, error)
 
 	userMap := (token.Claims.(jwt.MapClaims))
 
-	db.Conn.Where("password = ? AND email = ?", userMap["password"], userMap["email"]).First(&user)
+	db.Conn.Where("password = ? AND username = ?", userMap["password"], userMap["username"]).First(&user)
 	if user.ID == 0 {
 		return user, fmt.Errorf("User not found")
 	}
