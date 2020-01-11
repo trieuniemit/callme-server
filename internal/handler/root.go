@@ -22,4 +22,5 @@ func registerAPI(db *driver.Database, r *mux.Router) {
 	// register api
 	http.RegisterAuthRoutes(http.NewAuthHandler(db), r)
 	http.RegisterUserRoutes(http.NewUserHandler(db), r, db)
+	http.RegisterContactRoutes(http.NewContactHandler(db), r, db)
 }

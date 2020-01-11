@@ -59,7 +59,7 @@ func (auth *Auth) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.RespondSuccess(w, response.Message(false, "Register faild!"))
+	response.RespondBadRequest(w, response.Message(false, "Register faild!"))
 }
 
 // Login user and response token
