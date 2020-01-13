@@ -76,6 +76,7 @@ func (s *Socket) RegisterSocketID(token string, client *Client) {
 
 // MapEvents map events
 func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
+	log.Println(message.Action)
 
 	//register client
 	if message.Action == "register" {
@@ -90,7 +91,12 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 		return
 	}
 
-	if target == nil || from == nil {
+	if target == nil {
+		from.Emit("call_not_available", map[string]string{"error": "Tart get is not available"})
+		return
+	}
+
+	if from == nil {
 		return
 	}
 	// handle action
