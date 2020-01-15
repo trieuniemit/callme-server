@@ -52,9 +52,15 @@ func (h *Hub) run(OnReceiveMessage func(*Client, *Client, *Message)) {
 
 			if message != nil {
 				// get target client
-				from := h.clients[message.Data["from"]]
-				target := h.clients[message.Data["target"]]
-				OnReceiveMessage(from, target, message)
+				from := h.clients[message.Data["from"].(string)]
+				targetID := message.Data["target"]
+				if targetID != nil {
+					target := h.clients[targetID.(string)]
+					OnReceiveMessage(from, target, message)
+				} else {
+					OnReceiveMessage(from, nil, message)
+				}
+
 			}
 
 		}

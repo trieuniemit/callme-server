@@ -64,39 +64,52 @@ func NewSocketHandler(db *driver.Database) *Socket {
 }
 
 // RegisterSocketID func
-func (s *Socket) RegisterSocketID(token string, client *Client) {
+func (s *Socket) registerSocketID(token string, client *Client) {
 	user, err := jwtauth.ParseTokenToUser(token, s.db)
 	if err == nil {
+		user.SocketID = client.ID
 		client.User = &user
-		log.Println("Registed with token: ", token)
+
+		s.repo.RegisterSocketID(&user)
+		log.Println("Registed:", client.ID)
 	} else {
-		client.Emit("error", map[string]string{"error": "Invalid token, close connection"})
+		client.Emit("error", map[string]interface{}{"error": "Invalid token, close connection"})
 		client.Close()
 	}
+}
+
+func (s *Socket) setCallingStatus(status bool, from *Client, target *Client) {
+	userIDs := []uint{}
+
+	if target != nil {
+		target.User.Calling = status
+		userIDs = append(userIDs, target.User.ID)
+	}
+	if from != nil {
+		from.User.Calling = status
+		userIDs = append(userIDs, from.User.ID)
+	}
+	s.repo.SetCallingStatus(status, userIDs)
 }
 
 // MapEvents map events
 func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 	log.Println(message.Action)
-
 	//register client
 	if message.Action == "register" {
-		s.RegisterSocketID(message.Data["token"], from)
+		s.registerSocketID(message.Data["token"].(string), from)
 		return
 	}
-
 	// Check client is registed
 	if from.User == nil {
-		from.Emit("error", map[string]string{"error": "Unregistered client"})
+		from.Emit("error", map[string]interface{}{"error": "Unregistered client"})
 		from.Close()
 		return
 	}
-
-	if target == nil {
-		from.Emit("call_not_available", map[string]string{"error": "Tart get is not available"})
+	if target == nil && message.Action != "call_end" {
+		from.Emit("call_not_available", map[string]interface{}{"error": "Tart get is not available"})
 		return
 	}
-
 	if from == nil {
 		return
 	}
@@ -105,43 +118,40 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 	case "call_start":
 		// if target in another conversation
 		if target.User.Calling {
-			data := map[string]string{
+			data := map[string]interface{}{
 				"message": "User is busy",
 			}
 			from.Emit("user_busy", data)
 		}
+
 		// emit to target
-		data := map[string]string{
-			"from":     from.ID,
-			"fullname": from.User.Fullname,
+		s.setCallingStatus(true, from, target)
+		data := map[string]interface{}{
+			"user": from.User,
 		}
-		target.Emit("call_start", data)
+		target.Emit("call_received", data)
 		return
 	case "call_accepted":
-		//set false for calling status
-		target.User.Calling = true
-		from.User.Calling = true
-		s.repo.SetCallingStatus(true, []uint{target.User.ID, from.User.ID})
-
 		//emit to target
-		data := map[string]string{
+		data := map[string]interface{}{
 			"message": from.User.Fullname + " accepted",
 		}
 		target.Emit("call_accepted", data)
 		return
 	case "call_busy":
-		data := map[string]string{
+		data := map[string]interface{}{
 			"message": from.User.Fullname + " is busy",
 		}
 		target.Emit("call_busy", data)
 		return
 	case "call_end":
+		if target == nil {
+			return
+		}
 		//set false for calling status
-		target.User.Calling = false
-		from.User.Calling = false
-		s.repo.SetCallingStatus(false, []uint{target.User.ID, from.User.ID})
+		s.setCallingStatus(false, from, target)
 		//emit to target
-		data := map[string]string{
+		data := map[string]interface{}{
 			"message": from.User.Fullname + " ended the call",
 		}
 

@@ -2,7 +2,10 @@ package services
 
 import (
 	"webrtc-server/driver"
+	"webrtc-server/internal/models"
 	"webrtc-server/internal/repositories"
+
+	"github.com/jinzhu/gorm"
 )
 
 // SocketService struct
@@ -11,8 +14,8 @@ type SocketService struct {
 }
 
 // RegisterSocketID func
-func (c *SocketService) RegisterSocketID(token string) bool {
-	return true
+func (c *SocketService) RegisterSocketID(user *models.User) error {
+	return c.db.Conn.Model(user).UpdateColumn("socket_id", gorm.Expr("?", user.SocketID)).Error
 }
 
 // SetCallingStatus func

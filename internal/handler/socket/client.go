@@ -116,7 +116,7 @@ func (c *Client) writePump() {
 }
 
 // Emit message to client
-func (c *Client) Emit(action string, data map[string]string) {
+func (c *Client) Emit(action string, data map[string]interface{}) {
 	message := &Message{
 		Action: action,
 		Data:   data,

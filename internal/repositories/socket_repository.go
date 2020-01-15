@@ -1,7 +1,9 @@
 package repositories
 
+import "webrtc-server/internal/models"
+
 // SocketRepository interface
 type SocketRepository interface {
-	RegisterSocketID(token string) bool
+	RegisterSocketID(user *models.User) error
 	SetCallingStatus(status bool, IDs []uint)
 }
