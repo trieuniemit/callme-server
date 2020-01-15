@@ -68,6 +68,7 @@ func (s *Socket) RegisterSocketID(token string, client *Client) {
 	user, err := jwtauth.ParseTokenToUser(token, s.db)
 	if err == nil {
 		client.User = &user
+		log.Println("Registed with token: ", token)
 	} else {
 		client.Emit("error", map[string]string{"error": "Invalid token, close connection"})
 		client.Close()
