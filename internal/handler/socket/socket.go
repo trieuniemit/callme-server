@@ -72,13 +72,11 @@ func (s *Socket) registerSocketID(token string, client *Client) {
 
 		socketIDs, err := s.repo.RegisterSocketID(&user)
 
-		log.Println(socketIDs)
-
 		if err == nil {
 			for _, ID := range socketIDs {
 				if cl, ok := client.hub.clients[ID]; ok {
 					cl.Emit("user_online", map[string]interface{}{
-						"user": cl.User,
+						"user": client.User,
 					})
 				}
 			}
