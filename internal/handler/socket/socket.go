@@ -70,7 +70,21 @@ func (s *Socket) registerSocketID(token string, client *Client) {
 		user.SocketID = client.ID
 		client.User = &user
 
-		s.repo.RegisterSocketID(&user)
+		socketIDs, err := s.repo.RegisterSocketID(&user)
+
+		log.Println(socketIDs)
+
+		if err == nil {
+			for _, ID := range socketIDs {
+				if cl, ok := client.hub.clients[ID]; ok {
+					cl.Emit("user_online", map[string]interface{}{
+						"user": cl.User,
+					})
+				}
+			}
+		} else {
+			log.Println("Error when get contact socketIDs: ", err)
+		}
 		log.Println("Registed:", client.ID)
 	} else {
 		client.Emit("error", map[string]interface{}{"error": "Invalid token, close connection"})
