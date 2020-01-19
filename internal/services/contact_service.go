@@ -14,7 +14,7 @@ func (c *contactService) GetList(user *models.User) ([]models.User, error) {
 	users := []models.User{}
 
 	listQuery := c.db.Conn.Model(&models.Contact{}).Select("user2").Where("user1 = ?", user.ID).SubQuery()
-	err := c.db.Conn.Debug().Model(user).Where("id IN(?)", listQuery).Find(&users).Error
+	err := c.db.Conn.Model(user).Where("id IN(?)", listQuery).Find(&users).Error
 	return users, err
 }
 

@@ -106,7 +106,11 @@ func (s *Socket) setCallingStatus(status bool, from *Client, target *Client) {
 
 // MapEvents map events
 func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
-	log.Println(message.Action)
+
+	if target != nil {
+		log.Println(message.Action, ": ", from.ID, " - ", target.ID)
+	}
+
 	//register client
 	if message.Action == "register" {
 		s.registerSocketID(message.Data["token"].(string), from)
@@ -139,7 +143,9 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 		// emit to target
 		s.setCallingStatus(true, from, target)
 		data := map[string]interface{}{
-			"user": from.User,
+			"user":        from.User,
+			"description": message.Data["description"],
+			"session_id":  message.Data["session_id"],
 		}
 		target.Emit("call_received", data)
 		return
@@ -168,6 +174,13 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 		}
 
 		target.Emit("call_end", data)
+		return
+	case "call_candidate":
+		if target == nil {
+			return
+		}
+		//emit to target
+		target.Emit(message.Action, message.Data)
 		return
 	}
 }
