@@ -151,10 +151,7 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 		return
 	case "call_accepted":
 		//emit to target
-		data := map[string]interface{}{
-			"message": from.User.Fullname + " accepted",
-		}
-		target.Emit("call_accepted", data)
+		target.Emit("call_accepted", message.Data)
 		return
 	case "call_busy":
 		data := map[string]interface{}{
@@ -181,6 +178,10 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 		}
 		//emit to target
 		target.Emit(message.Action, message.Data)
+		return
+	case "call_answer":
+		//emit to target
+		target.Emit("call_accepted", message.Data)
 		return
 	}
 }
