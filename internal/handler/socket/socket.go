@@ -179,9 +179,9 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 		//emit to target
 		target.Emit(message.Action, message.Data)
 		return
-	case "call_answer":
+	case "call_offer":
 		//emit to target
-		target.Emit("call_accepted", message.Data)
+		target.Emit("call_offer", message.Data)
 		return
 	}
 }
