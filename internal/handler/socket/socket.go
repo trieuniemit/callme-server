@@ -108,7 +108,7 @@ func (s *Socket) setCallingStatus(status bool, from *Client, target *Client) {
 func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 
 	if target != nil {
-		log.Println(message.Action, ": ", from.ID, " - ", target.ID)
+		log.Print(message.Action, ": ", from.ID, " - ", target.ID)
 	}
 
 	//register client
@@ -184,6 +184,8 @@ func (s *Socket) MapEvents(from *Client, target *Client, message *Message) {
 		target.Emit("call_offer", message.Data)
 		return
 	}
+
+	log.Println(" ===> Success!");
 }
 
 // InitSocketRoute register route for socket
